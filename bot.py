@@ -32,3 +32,13 @@ class Bot:
         params = {'url': host}
         response = requests.get(self.api + method, params).json()
         return response
+    
+    
+    def send_audio(self, chat_id, audio):
+        '''Отправка аудио'''
+        method = 'sendAudio'
+        params = {'chat_id': chat_id, 'audio': audio}
+        response = requests.post(self.api + method, params).json()
+        return response
+    
+    
