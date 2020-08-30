@@ -97,8 +97,11 @@ def handle(last_upd, bot, cfg):
                 cfg.CONTENT[int(callback_data)].download('content/')
                 filename = cfg.CONTENT[int(callback_data)].title
                 ext = cfg.CONTENT[int(callback_data)].mime_type.split('/')[-1]
-                write_json(bot.send_audio(chat_id, f'content/{filename}.{ext}'))
-                os.system(f'rm ./content/\'{filename}\'.{ext}')
+
+                # Сделать метод, который будет возвращать file_id
+
+                write_json(bot.send_audio(chat_id, file_id))
+                # os.system(f'rm ./content/\'{filename}\'.{ext}')
                 cfg.CONTENT = None
             else:
                 text = f'⚠️ Такого контента больше не существует, пройдите все шаги заново!'
