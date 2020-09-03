@@ -41,70 +41,97 @@ def get_content_buttons(cfg):
     return 'Выберите какого качества контент вам нужен:', json.dumps({'inline_keyboard': buttons})
 
 
+def is_admin(username):
+    if username == 'kiri11_mi1':
+        return True
+    return False
+
+
 def handle(last_upd, bot, cfg):
+
     keyboard = None
-    try:
+
+    if 'message' in last_upd:
+
         # Извлекаем данные для их обработки
-        chat_id = last_upd['message']['chat']['id']
-        chat_text = last_upd['message']['text']
-        user_name = last_upd['message']['chat']['first_name']
+        chat_id = last_upd['message']['chat']['id']  
+        
+        if 'text' in last_upd['message']:
+            user_name = last_upd['message']['chat']['first_name']
+            chat_text = last_upd['message']['text']
 
-        # Составляем текст ответов
-        if chat_text == '/help':
-            text = f'Хочешь загрузить аудио? Тыкни ➡️ /load_audio\
-                     \nХочешь загрузить видео? Тыкни ➡️ /load_video'
-
-        elif chat_text in ['/load_audio', '/load_video']:
-            cfg.CONTENT_TYPE = chat_text.replace('/load_', '')
-            if cfg.CONTENT_URL:
-                # Написат функцию вывода всеx аудио или видео
-                text, keyboard = get_content_buttons(cfg)
-                #print(cfg.CONTENT_TYPE, cfg.CONTENT_URL)
-                cfg.CONTENT_TYPE, cfg.CONTENT_URL = None, None
-            else:
-                text = 'Введите URL контента с YouTube...'
-
-        elif is_url(chat_text):
-            cfg.CONTENT_URL = chat_text
-            if cfg.CONTENT_TYPE:
-                # Написат функцию вывода всеx аудио или видео
-                text, keyboard = get_content_buttons(cfg)
-                #print(cfg.CONTENT_TYPE, cfg.CONTENT_URL)
-                cfg.CONTENT_TYPE, cfg.CONTENT_URL = None, None
-            else:
+            # Составляем текст ответов
+            if chat_text == '/help':
                 text = f'Хочешь загрузить аудио? Тыкни ➡️ /load_audio\
-                       \nХочешь загрузить видео? Тыкни ➡️ /load_video'
+                        \nХочешь загрузить видео? Тыкни ➡️ /load_video'
 
-        else:
-            text = f"{user_name}, я тебя не понимаю, тыкни ➡️ /help"
+            elif chat_text in ['/load_audio', '/load_video']:
+                cfg.CONTENT_TYPE = chat_text.replace('/load_', '')
+                if cfg.CONTENT_URL:
+                    # Написат функцию вывода всеx аудио или видео
+                    text, keyboard = get_content_buttons(cfg)
+                    #print(cfg.CONTENT_TYPE, cfg.CONTENT_URL)
+                    cfg.CONTENT_TYPE, cfg.CONTENT_URL = None, None
+                else:
+                    text = 'Введите URL контента с YouTube...'
 
-        # Отправка сообщения в ответ
-        bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
+            elif is_url(chat_text):
+                cfg.CONTENT_URL = chat_text
+                if cfg.CONTENT_TYPE:
+                    # Написат функцию вывода всеx аудио или видео
+                    text, keyboard = get_content_buttons(cfg)
+                    #print(cfg.CONTENT_TYPE, cfg.CONTENT_URL)
+                    cfg.CONTENT_TYPE, cfg.CONTENT_URL = None, None
+                else:
+                    text = f'Хочешь загрузить аудио? Тыкни ➡️ /load_audio\
+                        \nХочешь загрузить видео? Тыкни ➡️ /load_video'
+
+            else:
+                text = f"{user_name}, я тебя не понимаю, тыкни ➡️ /help"
+
+            # Отправка сообщения в ответ
+            bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
+
+        if 'audio' in last_upd['message'] and \
+           is_admin(last_upd['message']['chat']['username']):
+            cfg.FILE_ID = last_upd['message']['audio']['file_id']
+        
+
+        if 'video' in last_upd['message'] and \
+           is_admin(last_upd['message']['chat']['username']):
+            cfg.FILE_ID = last_upd['message']['video']['file_id']
     
-    except KeyError:
-            
+    elif 'callback_query' in last_upd:
+
         # Извлекаем данные
         callback_data = last_upd['callback_query']['data']
         chat_id = last_upd['callback_query']['message']['chat']['id']
 
         if callback_data == 'repeat':
             # Прописать логику для повторного подключения
-            pass 
+            pass
 
         else:
             if cfg.CONTENT:
                 text = f'👍 Загрузка прошла успешно!'
                 cfg.CONTENT[int(callback_data)].download('content/')
+
                 filename = cfg.CONTENT[int(callback_data)].title
                 ext = cfg.CONTENT[int(callback_data)].mime_type.split('/')[-1]
 
-                # Сделать метод, который будет возвращать file_id
+                os.system(f"python client.py content/video.mp4")
 
-                write_json(bot.send_audio(chat_id, file_id))
+                bot.send_audio(chat_id, cfg.FILE_ID)
+
+                # write_json(bot.send_audio(chat_id, file_id))
                 # os.system(f'rm ./content/\'{filename}\'.{ext}')
-                cfg.CONTENT = None
+                cfg.CONTENT, cfg.FILE_ID = None, None
+
             else:
                 text = f'⚠️ Такого контента больше не существует, пройдите все шаги заново!'
 
         # Отправка сообщения в ответ
         bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
+
+
+        

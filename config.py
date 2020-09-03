@@ -6,3 +6,4 @@ class Config:
     CONTENT_TYPE = None
     CONTENT_URL = None
     CONTENT = None
+    FILE_ID = None

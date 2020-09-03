@@ -10,7 +10,8 @@ sslify = SSLify(app)
 cfg = Config()
 
 bot = Bot(cfg.TOKEN)
-webhook = bot.set_webhook(cfg.HOST)
+webhook = bot.set_webhook('https://4284bff5d95a.ngrok.io')
+
 if not webhook['ok']:
     print(f"Description --> {webhook['description']}")
     raise 'Webhook Error'
