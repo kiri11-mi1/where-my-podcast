@@ -93,13 +93,20 @@ def handle(last_upd, bot, cfg):
             bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
 
         if 'audio' in last_upd['message'] and \
-           is_admin(last_upd['message']['chat']['username']):
-            cfg.FILE_ID = last_upd['message']['audio']['file_id']
-        
+           is_admin(last_upd['message']['from']['username']):
+            file_id = last_upd['message']['audio']['file_id']
+            bot.send_audio(cfg.CHAT_ID, file_id)
 
         if 'video' in last_upd['message'] and \
-           is_admin(last_upd['message']['chat']['username']):
-            cfg.FILE_ID = last_upd['message']['video']['file_id']
+           is_admin(last_upd['message']['from']['username']):
+            file_id = last_upd['message']['video']['file_id']
+            bot.send_video(cfg.CHAT_ID, file_id)
+        
+        '''if 'document' in last_upd['message'] and \
+           is_admin(last_upd['message']['from']['username']):
+            file_id = last_upd['message']['document']['file_id']
+            bot.send_document(cfg.CHAT_ID, file_id)'''
+
     
     elif 'callback_query' in last_upd:
 
@@ -114,18 +121,29 @@ def handle(last_upd, bot, cfg):
         else:
             if cfg.CONTENT:
                 text = f'👍 Загрузка прошла успешно!'
-                cfg.CONTENT[int(callback_data)].download('content/')
+                cfg.CONTENT[int(callback_data)].download('content')
 
-                filename = cfg.CONTENT[int(callback_data)].title
-                ext = cfg.CONTENT[int(callback_data)].mime_type.split('/')[-1]
+                filename = cfg.CONTENT[int(callback_data)].title.replace(' ', '\ ')
+                filename = filename.replace('#', '')
+                filename = filename.replace(':', '')
 
-                os.system(f"python client.py content/video.mp4")
+                mime_type, ext = cfg.CONTENT[int(callback_data)].mime_type.split('/')
 
-                bot.send_audio(chat_id, cfg.FILE_ID)
+                if mime_type == 'audio':
+                    os.system(f"ffmpeg -i content/{filename}.{ext} content/result.mp3 -y")
+                    #print('26\ CSGO\ -\ Вертушки\ авапера.webm' == f'{filename}.{ext}')
+                    os.system("python client.py content/result.mp3")
+                
+                elif mime_type == 'video':
+                    os.system(f"python client.py content/{filename}.{ext}")
 
-                # write_json(bot.send_audio(chat_id, file_id))
-                # os.system(f'rm ./content/\'{filename}\'.{ext}')
-                cfg.CONTENT, cfg.FILE_ID = None, None
+                
+                cfg.CHAT_ID = chat_id
+                
+                # print(f'{filename}.{ext}')
+                # os.system(f"rm content/{filename}.{ext}")
+
+                cfg.CONTENT = None
 
             else:
                 text = f'⚠️ Такого контента больше не существует, пройдите все шаги заново!'

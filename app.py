@@ -10,7 +10,7 @@ sslify = SSLify(app)
 cfg = Config()
 
 bot = Bot(cfg.TOKEN)
-webhook = bot.set_webhook('https://4284bff5d95a.ngrok.io')
+webhook = bot.set_webhook(cfg.HOST)
 
 if not webhook['ok']:
     print(f"Description --> {webhook['description']}")
@@ -28,4 +28,4 @@ def index():
 
 
 if __name__ == '__main__':
-    app.run(port=5001)
+    app.run(port=5000)

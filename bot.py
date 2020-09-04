@@ -34,11 +34,24 @@ class Bot:
         return response
     
     
-    def send_audio(self, chat_id, audio):
+    def send_audio(self, chat_id, audio_id):
         '''Отправка аудио'''
         method = 'sendAudio'
-        params = {'chat_id': chat_id, 'audio': audio}
+        params = {'chat_id': chat_id, 'audio': audio_id}
         response = requests.post(self.api + method, params).json()
         return response
-    
-    
+
+
+    def send_video(self, chat_id, video_id):
+        '''Отправка видео'''
+        method = 'sendVideo'
+        params = {'chat_id': chat_id, 'video': video_id}
+        response = requests.post(self.api + method, params).json()
+        return response
+
+    def send_document(self, chat_id, doc_id):
+        '''Отправка документа'''
+        method = 'sendDocument'
+        params = {'chat_id': chat_id, 'document': doc_id}
+        response = requests.post(self.api + method, params).json()
+        return response

@@ -6,4 +6,6 @@ class Config:
     CONTENT_TYPE = None
     CONTENT_URL = None
     CONTENT = None
-    FILE_ID = None
+    CHAT_ID = None
+
+    # 26\ CSGO\ -\ Вертушки\ авапера.webm
