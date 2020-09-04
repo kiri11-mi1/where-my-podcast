@@ -102,10 +102,10 @@ def handle(last_upd, bot, cfg):
             file_id = last_upd['message']['video']['file_id']
             bot.send_video(cfg.CHAT_ID, file_id)
         
-        '''if 'document' in last_upd['message'] and \
+        if 'document' in last_upd['message'] and \
            is_admin(last_upd['message']['from']['username']):
             file_id = last_upd['message']['document']['file_id']
-            bot.send_document(cfg.CHAT_ID, file_id)'''
+            bot.send_document(cfg.CHAT_ID, file_id)
 
     
     elif 'callback_query' in last_upd:
@@ -151,5 +151,3 @@ def handle(last_upd, bot, cfg):
         # Отправка сообщения в ответ
         bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
 
-
-        
