@@ -1,6 +1,6 @@
 .venv/
 __pycache__/
 response.json
-content/
+download/
 env_var.txt
 test.session
