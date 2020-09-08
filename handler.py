@@ -2,20 +2,8 @@ import re
 import pytube
 import json
 import os
+import subprocess
 
-
-def write_json(data, filename='response.json'):
-    with open(filename, 'w') as file:
-        json.dump(data, file, indent=2, ensure_ascii=False)
-
-def is_url(url):
-    template = r'https?://(?:www\.)?youtube\.com[^&\s]+(?=\s|$)'
-    if re.search(template, url):
-        return True
-    return False
-
-def parse_name_content(name):
-        return ', '.join(re.findall(r"\d+fps|video/\w+|\d+p|\d+kbps|audio/\w+", name))
 
 def get_content_buttons(cfg):
     buttons = []
@@ -33,7 +21,15 @@ def get_content_buttons(cfg):
                     { 'text': '🔃 Попробуйте ещё', 'callback_data': 'repeat' }
                     ]})
     
-    cfg.CONTENT = content.streams.filter(type=cfg.CONTENT_TYPE).all()
+    if cfg.CONTENT_TYPE == 'audio':
+        cfg.CONTENT = content.streams.filter(type=cfg.CONTENT_TYPE, 
+                                            abr='128kbps', 
+                                            mime_type="audio/mp4").all()
+
+    elif cfg.CONTENT_TYPE == 'video':
+        cfg.CONTENT = content.streams.filter(type=cfg.CONTENT_TYPE,
+                                            progressive=True,
+                                            res='720p').all()
 
     for i, val in enumerate(cfg.CONTENT):
         buttons.append([{ 'text': f'✅ {parse_name_content(str(val))}', 'callback_data': i }])
@@ -41,8 +37,29 @@ def get_content_buttons(cfg):
     return 'Выберите какого качества контент вам нужен:', json.dumps({'inline_keyboard': buttons})
 
 
-def is_admin(username):
-    if username == 'kiri11_mi1':
+def delete_all_files(directory):
+    for filename in os.listdir(directory):
+        os.remove(f'{directory}/{filename}')
+
+
+def write_json(data, filename='response.json'):
+    with open(filename, 'w') as file:
+        json.dump(data, file, indent=2, ensure_ascii=False)
+
+
+def is_url(url):
+    template = r'https?://(?:www\.)?youtube\.com[^&\s]+(?=\s|$)'
+    if re.search(template, url):
+        return True
+    return False
+
+
+def parse_name_content(name):
+        return ', '.join(re.findall(r"\d+fps|video/mp4|\d+p|\d+kbps|audio/\w+", name))
+
+
+def is_admin(username, cfg):
+    if username == cfg.ADMIN:
         return True
     return False
 
@@ -61,7 +78,7 @@ def handle(last_upd, bot, cfg):
             chat_text = last_upd['message']['text']
 
             # Составляем текст ответов
-            if chat_text == '/help':
+            if chat_text in ['/help', '/start']:
                 text = f'Хочешь загрузить аудио? Тыкни ➡️ /load_audio\
                         \nХочешь загрузить видео? Тыкни ➡️ /load_video'
 
@@ -92,20 +109,19 @@ def handle(last_upd, bot, cfg):
             # Отправка сообщения в ответ
             bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
 
-        if 'audio' in last_upd['message'] and \
-           is_admin(last_upd['message']['from']['username']):
-            file_id = last_upd['message']['audio']['file_id']
-            bot.send_audio(cfg.CHAT_ID, file_id)
+        if is_admin(last_upd['message']['from']['username'], cfg):
 
-        if 'video' in last_upd['message'] and \
-           is_admin(last_upd['message']['from']['username']):
-            file_id = last_upd['message']['video']['file_id']
-            bot.send_video(cfg.CHAT_ID, file_id)
-        
-        if 'document' in last_upd['message'] and \
-           is_admin(last_upd['message']['from']['username']):
-            file_id = last_upd['message']['document']['file_id']
-            bot.send_document(cfg.CHAT_ID, file_id)
+            if 'audio' in last_upd['message']:
+                file_id = last_upd['message']['audio']['file_id']
+                bot.send_audio(cfg.CHAT_ID, file_id)
+
+            if 'video' in last_upd['message']:
+                file_id = last_upd['message']['video']['file_id']
+                bot.send_video(cfg.CHAT_ID, file_id)
+            
+            if 'document' in last_upd['message']:
+                file_id = last_upd['message']['document']['file_id']
+                bot.send_document(cfg.CHAT_ID, file_id)
 
     
     elif 'callback_query' in last_upd:
@@ -121,27 +137,22 @@ def handle(last_upd, bot, cfg):
         else:
             if cfg.CONTENT:
                 text = f'👍 Загрузка прошла успешно!'
-                cfg.CONTENT[int(callback_data)].download('content')
+                cfg.CONTENT[int(callback_data)].download('download')
 
-                filename = cfg.CONTENT[int(callback_data)].title.replace(' ', '\ ')
-                filename = filename.replace('#', '')
-                filename = filename.replace(':', '')
-
-                mime_type, ext = cfg.CONTENT[int(callback_data)].mime_type.split('/')
+                mime_type, _ = cfg.CONTENT[int(callback_data)].mime_type.split('/')
+                old_filename = os.listdir('download')[0]
 
                 if mime_type == 'audio':
-                    os.system(f"ffmpeg -i content/{filename}.{ext} content/result.mp3 -y")
-                    #print('26\ CSGO\ -\ Вертушки\ авапера.webm' == f'{filename}.{ext}')
-                    os.system("python client.py content/result.mp3")
+                    subprocess.call(['ffmpeg', '-i', 'download/'+old_filename, 'download/out.mp3', '-y'])
+                    os.system(f"python client.py download/out.mp3")
                 
                 elif mime_type == 'video':
-                    os.system(f"python client.py content/{filename}.{ext}")
+                    # Исправить на subprocess
+                    subprocess.call(['python', 'client.py', 'download/'+old_filename])
 
-                
                 cfg.CHAT_ID = chat_id
                 
-                # print(f'{filename}.{ext}')
-                # os.system(f"rm content/{filename}.{ext}")
+                delete_all_files('download')
 
                 cfg.CONTENT = None
 
