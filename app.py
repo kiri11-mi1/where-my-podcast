@@ -3,7 +3,6 @@ from flask_sslify import SSLify
 import json
 from bot import Bot
 from config import Config
-from handler import write_json
 
 app = Flask(__name__)
 sslify = SSLify(app)
@@ -16,12 +15,10 @@ if not webhook['ok']:
     print(f"Description --> {webhook['description']}")
     raise 'Webhook Error'
 
-
 @app.route('/', methods=['POST', 'GET'])
 def index():
     if request.method == 'POST':
         response = request.get_json()
-        write_json(response)
         bot.handle(response)
         return jsonify(response)
     return '<h1>Wellcome</h1>'
