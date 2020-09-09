@@ -140,9 +140,8 @@ class Bot:
             else:
                 if self.content:
                     text = f'👍 Загрузка прошла успешно!'
-                    self.content[int(callback_data)].download('download')
-
                     mime_type, _ = self.content[int(callback_data)].mime_type.split('/')
+                    self.content[int(callback_data)].download('download')
                     old_filename = os.listdir('download')[0]
 
                     if mime_type == 'audio':
