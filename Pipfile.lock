@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "0787877b2697ec1a554a89f226cda46ebfd31fc602ab42b44414a687d3eab7d1"
+            "sha256": "37c5364c769e45ba9a10b0bbdab5fa247e584491304a6aa4db27f77bcb5a3509"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -129,14 +129,6 @@
             ],
             "index": "pypi",
             "version": "==7.1.2"
-        },
-        "colorama": {
-            "hashes": [
-                "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b",
-                "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"
-            ],
-            "markers": "sys_platform == 'win32'",
-            "version": "==0.4.4"
         },
         "flask": {
             "hashes": [
@@ -501,6 +493,14 @@
             ],
             "index": "pypi",
             "version": "==1.16.4"
+        },
+        "tinydb": {
+            "hashes": [
+                "sha256:3c5e5c72c98db07e707be4e25f9e135a8a14b96938e4745b1b7187fec523ff58",
+                "sha256:7d18b2d0217827c188f177cd23df60e5cd5316a717e836a8e21c8c2488262cf5"
+            ],
+            "index": "pypi",
+            "version": "==4.5.2"
         },
         "toml": {
             "hashes": [

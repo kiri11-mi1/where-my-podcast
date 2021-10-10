@@ -1,13 +1,14 @@
 import logging
+import asyncio
 
-import youtube_dl
-from youtube_dl.utils import DownloadError
+from tinydb import TinyDB, Query
 
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.utils.exceptions import NetworkError
 
-from services.credentials import TG_TOKEN
-from services.responses import START_MESSAGE, HELP_MESSAGE
+from services.credentials import TG_TOKEN, DATABASE
+from services.responses import START_MESSAGE, HELP_MESSAGE, COMMANDS
+from services.converter import Converter
 
 
 logging.basicConfig(
@@ -17,6 +18,16 @@ logging.basicConfig(
 
 bot = Bot(token=TG_TOKEN)
 dp = Dispatcher(bot)
+
+converter = Converter('media')
+db = TinyDB(DATABASE)
+Audio = Query()
+
+
+@dp.message_handler(commands=['register'])
+async def register(message: types.Message):
+    logging.info("setting commands")
+    await dp.bot.set_my_commands(COMMANDS)
 
 
 @dp.message_handler(commands=['start'])
@@ -32,27 +43,31 @@ async def help_command(message: types.Message):
 
 
 @dp.message_handler()
-async def parse_url(message: types.Message):
-    ydl = youtube_dl.YoutubeDL({'media': '%(id)s.%(ext)s'})
-    try:
-        with ydl:
-            result = ydl.extract_info(
-                message.text,
-                download=False # We just want to extract the info
-            )
-        if 'entries' in result:
-            # Can be a playlist or a list of videos
-            video = result['entries'][0]
-        else:
-            # Just a video
-            video = result
+async def converting(message: types.Message):
+    logging.info('SEARCHING video')
+    meta = converter.get_metadata(message.text)
+    if isinstance(meta, str):
+        return await message.reply(meta)
 
-        for f in video.get('formats'):
-            if f.get('ext') == 'mp4' and f.get('asr'):
-                print(f.get('url'))
-                await bot.send_video(message.from_user.id, f.get('url'))
-    except DownloadError:
-        await message.reply('❗️ Неверный URL')
+    search_data = db.search(Audio.youtube_id == meta['id'])
+
+    if search_data:
+        logging.info(f"Audio {meta['title']} IS EXIST")
+        return await bot.send_audio(
+            message.from_user.id,
+            search_data[0]['file_id'],
+            title=meta['title']
+        )
+
+    await message.reply('⚠️ Идёт загрузка...')
+    logging.info('LOADING video')
+    converter.download(message.text)
+
+    file = open(f"{converter.directory}/{meta['id']}.mp3", "rb")
+    msg = await bot.send_audio(message.from_user.id, file, title=meta['title'])
+    db.insert({'youtube_id': meta['id'], 'file_id': msg.audio.file_id})
+    logging.info('video LOADED SUCCESSFULL')
+    converter.clear_folder()
 
 
 if __name__ == '__main__':
