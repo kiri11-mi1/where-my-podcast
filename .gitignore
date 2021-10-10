@@ -1,6 +1,3 @@
 .venv/
 __pycache__/
-response.json
-download/
-env_var.txt
-test.session
+media/
