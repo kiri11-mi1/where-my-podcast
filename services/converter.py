@@ -26,6 +26,8 @@ class Converter:
         try:
             with  youtube_dl.YoutubeDL(self.ydl_opts) as ydl:
                 result = ydl.extract_info(url, download=False)
+                if 'entries' in result:
+                    result = result['entries'][0]
                 return {
                     'id': result['id'],
                     'title': result['title'],
