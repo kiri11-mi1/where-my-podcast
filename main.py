@@ -1,5 +1,4 @@
 import logging
-import asyncio
 
 from tinydb import TinyDB, Query
 
