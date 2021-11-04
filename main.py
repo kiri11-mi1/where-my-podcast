@@ -55,7 +55,6 @@ async def converting(message: types.Message):
         return await bot.send_audio(
             message.from_user.id,
             search_data[0]['file_id'],
-            title=meta['title']
         )
 
     await message.reply('⚠️ Идёт загрузка...')
@@ -63,7 +62,12 @@ async def converting(message: types.Message):
     converter.download(message.text)
 
     file = open(f"{converter.directory}/{meta['id']}.mp3", "rb")
-    msg = await bot.send_audio(message.from_user.id, file, title=meta['title'])
+    msg = await bot.send_audio(
+        message.from_user.id,
+        file,
+        title=meta['title'],
+        performer='Audio Bot',
+    )
     db.insert({'youtube_id': meta['id'], 'file_id': msg.audio.file_id})
     logging.info('video LOADED SUCCESSFULL')
     converter.clear_folder()
