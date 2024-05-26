@@ -4,5 +4,5 @@ RUN mkdir /app
 
 ADD src /app/
 WORKDIR /app
-RUN go build -o main ./main.go
+RUN go build -o main .
 CMD ["./main"]
