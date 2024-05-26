@@ -9,7 +9,7 @@ import (
 
 func main() {
 	pref := tg.Settings{
-		Token:  GetVal().TelegramToken,
+		Token:  GetEnv().TelegramToken,
 		Poller: &tg.LongPoller{Timeout: 10 * time.Second},
 	}
 	b, err := tg.NewBot(pref)
@@ -18,7 +18,10 @@ func main() {
 		return
 	}
 
-	// b.Handle("/start", handlerManager.HandleVPN)
+	b.Handle(tg.OnText, func(c tg.Context) error {
+		_, err := c.Bot().Send(c.Recipient(), "Hello, world!")
+		return err
+	})
 
 	log.Println(b.Me.Username, "start working...")
 	b.Start()
