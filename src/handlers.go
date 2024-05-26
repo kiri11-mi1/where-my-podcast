@@ -35,9 +35,11 @@ func (h *Handler) HandleStart(c tg.Context) error {
 func (h *Handler) HandleMessage(c tg.Context) error {
 	if !youtube.IsValidLink(c.Message().Text) {
 		c.Bot().Send(c.Recipient(), "Invalid link")
+		return nil
 	}
 	ytId, err := youtube.GetYTId(c.Message().Text)
 	if err != nil {
+		// TODO: добавить логгирование
 		return err
 	}
 	fileId := h.cache.Get(ytId)
