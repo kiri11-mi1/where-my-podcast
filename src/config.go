@@ -12,7 +12,7 @@ type Config struct {
 
 var cfg Config
 
-func GetVal() Config {
+func GetEnv() Config {
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalln("Config", err)
 	}
