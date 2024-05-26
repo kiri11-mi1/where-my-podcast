@@ -17,11 +17,12 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-
-	b.Handle(tg.OnText, func(c tg.Context) error {
-		_, err := c.Bot().Send(c.Recipient(), "Hello, world!")
-		return err
-	})
+	// TODO:
+	// cache = NewCache()
+	// ytService = NewYtService(cache)
+	handler := NewHandler(nil, nil)
+	b.Handle("/start", handler.HandleStart)
+	b.Handle(tg.OnText, handler.HandleMessage)
 
 	log.Println(b.Me.Username, "start working...")
 	b.Start()
