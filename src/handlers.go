@@ -37,7 +37,7 @@ func (h *Handler) HandleMessage(c tg.Context) error {
 		c.Bot().Send(c.Recipient(), "Invalid link")
 		return nil
 	}
-	ytId, err := youtube.GetYTId(c.Message().Text)
+	ytId, err := youtube.Link2Id(c.Message().Text)
 	if err != nil {
 		// TODO: добавить логгирование
 		return err
