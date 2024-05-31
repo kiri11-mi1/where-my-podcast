@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"time"
+	"where-my-podcast/storage"
 
 	tg "gopkg.in/telebot.v3"
 )
@@ -17,10 +18,10 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-	// TODO:
-	// cache = NewCache()
+
+	cache := storage.NewCache(GetEnv().RedisUrl)
 	// ytService = NewYtService(cache)
-	handler := NewHandler(nil, nil)
+	handler := NewHandler(cache, nil)
 	b.Handle("/start", handler.HandleStart)
 	b.Handle(tg.OnText, handler.HandleMessage)
 
