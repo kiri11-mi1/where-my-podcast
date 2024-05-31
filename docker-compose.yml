@@ -1,20 +1,4 @@
 services:
-  mongodb:
-    image: mongo:6.0.2
-    restart: always
-    env_file: .env
-    volumes:
-      - ./mongodb-data:/data/db
-    ports:
-      - 27017:27017
-
-  mongodb-ui:
-    image: mongo-express
-    restart: always
-    env_file: .env
-    ports:
-      - 8081:8081
-
   bot:
     build:
       dockerfile: ./Dockerfile
@@ -24,3 +8,6 @@ services:
       - mongodb
     env_file:
       - .env
+
+  redis:
+    image: redis
