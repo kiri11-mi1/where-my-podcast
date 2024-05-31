@@ -32,7 +32,25 @@ func IsValidLink(link string) bool {
 	return false
 }
 
-func Link2Id(url string) (string, error) {
+func Link2Id(link string) (string, error) {
 	// Fetching video id from youtube url
-	return "id", nil
+	if !IsValidLink(link) {
+		return "", ErrInvalidYoutubeLink
+	}
+
+	parsedURL, err := url.Parse(link)
+	if err != nil {
+		return "", err
+	}
+	var id string
+	if parsedURL.Host == "youtu.be" {
+		id = parsedURL.Path[1:]
+	} else {
+		queryParams := parsedURL.Query()
+		if val, ok := queryParams["v"]; ok {
+			id = val[0]
+		}
+	}
+
+	return id, nil
 }
