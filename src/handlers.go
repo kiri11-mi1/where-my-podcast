@@ -34,26 +34,26 @@ func (h *Handler) HandleStart(c tg.Context) error {
 
 func (h *Handler) HandleMessage(c tg.Context) error {
 	if !youtube.IsValidLink(c.Message().Text) {
-		c.Bot().Send(c.Recipient(), "Invalid link")
-		return nil
+		_, err := c.Bot().Send(c.Recipient(), "Ссылка неверна")
+		return err
 	}
 	ytId, err := youtube.Link2Id(c.Message().Text)
 	if err != nil {
 		// TODO: добавить логгирование
 		return err
 	}
-	fileId := h.cache.Get(ytId)
-	if fileId == "" {
-		// TODO: скачивание ролика
-		// path := h.service.Download()
-		// audio := &tg.Audio{File: tg.FromDisk(filePath)}
+	// fileId := h.cache.Get(ytId)
+	// if fileId == "" {
+	// 	// TODO: скачивание ролика
+	// 	// path := h.service.Download()
+	// 	// audio := &tg.Audio{File: tg.FromDisk(filePath)}
 
-		// TODO: сохранение fileId в бд
-		// h.cache.Set(ytId, fileId)
-	} else {
-		// audio := &tg.Audio{File: tg.File{FileID: fileId}}
-		// c.Bot().Send(c.Recipient(), audio)
-	}
-	_, err = c.Bot().Send(c.Recipient(), c.Message().Text)
+	// 	// TODO: сохранение fileId в бд
+	// 	// h.cache.Set(ytId, fileId)
+	// } else {
+	// 	// audio := &tg.Audio{File: tg.File{FileID: fileId}}
+	// 	// c.Bot().Send(c.Recipient(), audio)
+	// }
+	_, err = c.Bot().Send(c.Recipient(), ytId)
 	return err
 }
