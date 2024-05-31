@@ -5,9 +5,16 @@ services:
       context: .
     restart: always
     depends_on:
-      - mongodb
+      - redis
     env_file:
       - .env
 
   redis:
-    image: redis
+    image: redis:latest
+    restart: always
+    volumes:
+      - ./redis/data:/data
+    env_file:
+      - path: .env
+    ports:
+      - '6379:6379'
