@@ -7,8 +7,8 @@ import (
 )
 
 type Cache interface {
-	Get(id string) string                // TODO: может быть int64
-	Set(youtubeId string, fileId string) //TODO: fileId может быть int64
+	Get(id string) string                      // TODO: может быть int64
+	Set(youtubeId string, fileId string) error //TODO: fileId может быть int64
 }
 
 type YoutubeService interface {
@@ -42,18 +42,20 @@ func (h *Handler) HandleMessage(c tg.Context) error {
 		// TODO: добавить логгирование
 		return err
 	}
-	// fileId := h.cache.Get(ytId)
-	// if fileId == "" {
-	// 	// TODO: скачивание ролика
-	// 	// path := h.service.Download()
-	// 	// audio := &tg.Audio{File: tg.FromDisk(filePath)}
+	fileId := h.cache.Get(ytId)
+	if fileId == "" {
+		_, err := c.Bot().Send(c.Recipient(), "В базе видоса нет.")
+		return err
+		// TODO: скачивание ролика
+		// path := h.service.Download()
+		// audio := &tg.Audio{File: tg.FromDisk(filePath)}
 
-	// 	// TODO: сохранение fileId в бд
-	// 	// h.cache.Set(ytId, fileId)
-	// } else {
-	// 	// audio := &tg.Audio{File: tg.File{FileID: fileId}}
-	// 	// c.Bot().Send(c.Recipient(), audio)
-	// }
+		// TODO: сохранение fileId в бд
+		// h.cache.Set(ytId, fileId)
+	} else {
+		audio := &tg.Audio{File: tg.File{FileID: fileId}}
+		c.Bot().Send(c.Recipient(), audio)
+	}
 	_, err = c.Bot().Send(c.Recipient(), ytId)
 	return err
 }
