@@ -8,6 +8,7 @@ import (
 
 type Config struct {
 	TelegramToken string `env:"TELEGRAM_TOKEN"`
+	RedisUrl      string `env:"REDIS_URL"`
 }
 
 var cfg Config
