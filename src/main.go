@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 	"where-my-podcast/storage"
+	"where-my-podcast/youtube"
 
 	tg "gopkg.in/telebot.v3"
 )
@@ -20,8 +21,8 @@ func main() {
 	}
 
 	cache := storage.NewCache(GetEnv().RedisUrl, 2000*time.Hour)
-	// ytService = NewYtService(cache)
-	handler := NewHandler(cache, nil)
+	ytService := youtube.NewDownloader()
+	handler := NewHandler(cache, ytService)
 	b.Handle("/start", handler.HandleStart)
 	b.Handle(tg.OnText, handler.HandleMessage)
 
