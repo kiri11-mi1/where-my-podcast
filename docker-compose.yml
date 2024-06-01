@@ -15,6 +15,6 @@ services:
     volumes:
       - ./redis/data:/data
     env_file:
-      - path: .env
+      - .env
     ports:
       - '6379:6379'
