@@ -19,7 +19,7 @@ func main() {
 		return
 	}
 
-	cache := storage.NewCache(GetEnv().RedisUrl)
+	cache := storage.NewCache(GetEnv().RedisUrl, 2000*time.Hour)
 	// ytService = NewYtService(cache)
 	handler := NewHandler(cache, nil)
 	b.Handle("/start", handler.HandleStart)
