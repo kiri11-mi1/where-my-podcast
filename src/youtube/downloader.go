@@ -10,14 +10,13 @@ type Downloader struct {
 	folder string
 }
 
-func NewDownloader() *Downloader {
-	return &Downloader{}
+func NewDownloader(folderPath string) *Downloader {
+	return &Downloader{folder: folderPath}
 }
 
 func (d *Downloader) Download(link, video_id string) (string, error) {
 	outputPath := fmt.Sprintf("%s/%s.mp3", d.folder, video_id)
-	defer os.Remove(outputPath)
-	cmd := exec.Command("yt-dlp", "-x", "--audio-format", "mp3", "-o", d.folder, link)
+	cmd := exec.Command("yt-dlp", "-x", "--audio-format", "mp3", "-o", outputPath, link)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
