@@ -8,8 +8,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-const PENDING string = "pending"
-
 type Cache struct {
 	client *redis.Client
 	ttl    time.Duration
@@ -27,18 +25,10 @@ func NewCache(redisUrl string, ttl time.Duration) *Cache {
 	}
 }
 
-func (c *Cache) GetFileId(id string) string {
+func (c *Cache) Get(id string) string {
 	return c.client.Get(context.Background(), id).Val()
 }
 
-func (c *Cache) SetFileId(youtubeId string, fileId string) error {
+func (c *Cache) Set(youtubeId string, fileId string) error {
 	return c.client.Set(context.Background(), youtubeId, fileId, c.ttl).Err()
-}
-
-func (c *Cache) SetPending(id string) error {
-	return c.client.Set(context.Background(), id, PENDING, c.ttl).Err()
-}
-
-func (c *Cache) IsPending(id string) bool {
-	return c.client.Get(context.Background(), id).Val() == PENDING
 }
