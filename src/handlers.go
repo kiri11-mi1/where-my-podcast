@@ -2,16 +2,17 @@ package main
 
 import (
 	"log"
+	"os"
 	"where-my-podcast/youtube"
 
 	tg "gopkg.in/telebot.v3"
 )
 
+const PENDING string = "pending"
+
 type Cache interface {
-	GetFileId(id string) string
-	SetFileId(youtubeId string, fileId string) error
-	SetPending(youtubeId string) error
-	IsPending(youtubeId string) bool
+	Get(id string) string
+	Set(youtubeId string, fileId string) error
 }
 
 type YoutubeService interface {
@@ -40,30 +41,32 @@ func (h *Handler) HandleMessage(c tg.Context) error {
 	ytId, err := youtube.Link2Id(c.Message().Text)
 	if err != nil {
 		log.Println(err)
-		_, err := c.Bot().Send(c.Recipient(), "Проверьте ссылку")
+		_, err := c.Bot().Send(c.Recipient(), "Check youtube url")
 		return err
 	}
-	if h.cache.IsPending(ytId) {
-		_, err := c.Bot().Send(c.Recipient(), "Запрос уже обрабатывается")
+	fileId := h.cache.Get(ytId)
+	if fileId == PENDING {
+		_, err := c.Bot().Send(c.Recipient(), "Wait...")
 		return err
 	}
-	fileId := h.cache.GetFileId(ytId)
 	if fileId != "" {
+		log.Println("get audio from cache")
 		audio := &tg.Audio{File: tg.File{FileID: fileId}}
 		_, err = c.Bot().Send(c.Recipient(), audio)
 		return err
 	}
-	h.cache.SetPending(ytId)
+	h.cache.Set(ytId, PENDING)
+	log.Println("downloading", link)
 	filePath, err := h.service.Download(link, ytId)
+	defer os.Remove(filePath)
 	if err != nil {
 		log.Println(err)
-		_, err = c.Bot().Send(c.Recipient(), "Произошла ошибка скачивания")
+		h.cache.Set(ytId, "")
+		_, err = c.Bot().Send(c.Recipient(), "error downloading audio")
 		return err
 	}
 	audio := &tg.Audio{File: tg.FromDisk(filePath)}
-	if err := h.cache.SetFileId(ytId, audio.FileID); err != nil {
-		return err
-	}
+	h.cache.Set(ytId, audio.FileID)
 	_, err = c.Bot().Send(c.Recipient(), audio)
 	return err
 }
