@@ -6,3 +6,4 @@ media/
 *.json
 mongodb-data/
 redis/
+dowloads/
