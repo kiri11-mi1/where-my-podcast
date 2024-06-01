@@ -1,18 +1,21 @@
 package main
 
 import (
+	"log"
 	"where-my-podcast/youtube"
 
 	tg "gopkg.in/telebot.v3"
 )
 
 type Cache interface {
-	Get(id string) string                      // TODO: может быть int64
-	Set(youtubeId string, fileId string) error //TODO: fileId может быть int64
+	GetFileId(id string) string
+	SetFileId(youtubeId string, fileId string) error
+	SetPending(youtubeId string) error
+	IsPending(youtubeId string) bool
 }
 
 type YoutubeService interface {
-	// TODO: добавить методы для работы с youtube
+	Download(link, videoId string) (string, error)
 }
 
 type Handler struct {
@@ -33,29 +36,34 @@ func (h *Handler) HandleStart(c tg.Context) error {
 }
 
 func (h *Handler) HandleMessage(c tg.Context) error {
-	if !youtube.IsValidLink(c.Message().Text) {
-		_, err := c.Bot().Send(c.Recipient(), "Ссылка неверна")
-		return err
-	}
+	link := c.Message().Text
 	ytId, err := youtube.Link2Id(c.Message().Text)
 	if err != nil {
-		// TODO: добавить логгирование
+		log.Println(err)
+		_, err := c.Bot().Send(c.Recipient(), "Проверьте ссылку")
 		return err
 	}
-	fileId := h.cache.Get(ytId)
-	if fileId == "" {
-		_, err := c.Bot().Send(c.Recipient(), "В базе видоса нет.")
+	if h.cache.IsPending(ytId) {
+		_, err := c.Bot().Send(c.Recipient(), "Запрос уже обрабатывается")
 		return err
-		// TODO: скачивание ролика
-		// path := h.service.Download()
-		// audio := &tg.Audio{File: tg.FromDisk(filePath)}
-
-		// TODO: сохранение fileId в бд
-		// h.cache.Set(ytId, fileId)
-	} else {
+	}
+	fileId := h.cache.GetFileId(ytId)
+	if fileId != "" {
 		audio := &tg.Audio{File: tg.File{FileID: fileId}}
-		c.Bot().Send(c.Recipient(), audio)
+		_, err = c.Bot().Send(c.Recipient(), audio)
+		return err
 	}
-	_, err = c.Bot().Send(c.Recipient(), ytId)
+	h.cache.SetPending(ytId)
+	filePath, err := h.service.Download(link, ytId)
+	if err != nil {
+		log.Println(err)
+		_, err = c.Bot().Send(c.Recipient(), "Произошла ошибка скачивания")
+		return err
+	}
+	audio := &tg.Audio{File: tg.FromDisk(filePath)}
+	if err := h.cache.SetFileId(ytId, audio.FileID); err != nil {
+		return err
+	}
+	_, err = c.Bot().Send(c.Recipient(), audio)
 	return err
 }
