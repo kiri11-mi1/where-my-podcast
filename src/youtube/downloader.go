@@ -13,9 +13,16 @@ type Downloader struct {
 }
 
 func NewDownloader(folderPath string) *Downloader {
-	pwd, _ := os.Getwd()
-	log.Println("init youtube-dl:", path.Join(pwd, folderPath))
-	return &Downloader{folder: folderPath}
+	pwd, err := os.Getwd()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fullPath := path.Join(pwd, folderPath)
+	if err := os.MkdirAll(fullPath, 0755); err != nil {
+		log.Fatalln(err)
+	}
+	log.Println("init youtube-dl:", fullPath)
+	return &Downloader{folder: fullPath}
 }
 
 func (d *Downloader) Download(link, video_id string) (string, error) {
