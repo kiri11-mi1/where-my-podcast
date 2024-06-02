@@ -8,6 +8,8 @@ services:
       - redis
     env_file:
       - .env
+    volumes:
+      - ./downloads:/app/downloads
 
   redis:
     image: redis:latest
