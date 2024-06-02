@@ -2,8 +2,10 @@ package youtube
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+	"path"
 )
 
 type Downloader struct {
@@ -11,6 +13,8 @@ type Downloader struct {
 }
 
 func NewDownloader(folderPath string) *Downloader {
+	pwd, _ := os.Getwd()
+	log.Println("init youtube-dl:", path.Join(pwd, folderPath))
 	return &Downloader{folder: folderPath}
 }
 

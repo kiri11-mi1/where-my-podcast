@@ -14,6 +14,7 @@ type Cache struct {
 }
 
 func NewCache(redisUrl string, ttl time.Duration) *Cache {
+	log.Println("init redis:", redisUrl)
 	opt, err := redis.ParseURL(redisUrl)
 	if err != nil {
 		log.Fatalln("failed init redis", err)
