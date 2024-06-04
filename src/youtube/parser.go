@@ -15,10 +15,11 @@ import (
 
 type Parser struct{}
 type Video struct {
-	Id       string
-	Title    string
-	Channel  string
-	Duration int
+	Id        string
+	Title     string
+	Channel   string
+	Duration  int
+	Thumbnail string
 }
 
 func NewParser() *Parser {
@@ -48,7 +49,7 @@ func (p *Parser) Id2Video(id string) (Video, error) {
 		log.Println("error parse html:", err)
 		return Video{}, ErrParseHTMLFailed
 	}
-	v := Video{Id: id, Title: p.parseTitle(doc), Channel: p.parseChannel(doc), Duration: p.parseDuration(doc)}
+	v := Video{Id: id, Title: p.parseTitle(doc), Channel: p.parseChannel(doc), Duration: p.parseDuration(doc), Thumbnail: p.parseThumbnail(doc)}
 	return v, nil
 }
 
@@ -80,10 +81,19 @@ func (p *Parser) parseDuration(doc *goquery.Document) int {
 }
 
 func (p *Parser) parseChannel(doc *goquery.Document) string {
-	channelName := doc.Find("a[class='yt-simple-endpoint style-scope yt-formatted-string']").Text()
+	channelName := doc.Find("a.yt-simple-endpoint.style-scope.yt-formatted-string").First().Text()
 	if channelName == "" {
 		log.Println("chanel not found")
 		return ""
 	}
 	return channelName
+}
+
+func (p *Parser) parseThumbnail(doc *goquery.Document) string {
+	pic := doc.Find("link[itemprop='thumbnailUrl']").AttrOr("href", "")
+	if pic == "" {
+		log.Println("thumbnail not found")
+		return ""
+	}
+	return pic
 }
