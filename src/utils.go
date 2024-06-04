@@ -6,9 +6,12 @@ import (
 	yt "where-my-podcast/youtube"
 )
 
-func MakeAudio(v yt.Video, file string, fromDisk bool) *tg.Audio {
+func MakeAudio(v yt.Video, fileStr string, fromDisk bool) *tg.Audio {
+	var file tg.File
 	if fromDisk {
-		return &tg.Audio{File: tg.FromDisk(file), Performer: v.Channel, Title: v.Title, Duration: v.Duration}
+		file = tg.FromDisk(fileStr)
+	} else {
+		file = tg.File{FileID: fileStr}
 	}
-	return &tg.Audio{File: tg.File{FileID: file}, Performer: v.Channel, Title: v.Title, Duration: v.Duration}
+	return &tg.Audio{File: file, Performer: v.Channel, Title: v.Title, Duration: v.Duration, Thumbnail: &tg.Photo{File: tg.FromURL(v.Thumbnail)}}
 }
