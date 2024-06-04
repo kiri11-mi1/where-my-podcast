@@ -50,12 +50,6 @@ func (h *Handler) HandleMessage(c tg.Context) error {
 		_, err := c.Bot().Send(c.Recipient(), "Check youtube url")
 		return err
 	}
-	video, err := h.parser.Id2Video(ytId)
-	if err != nil {
-		log.Println(err)
-		_, err := c.Bot().Send(c.Recipient(), "error fetching video info")
-		return err
-	}
 	fileId := h.cache.Get(ytId)
 	if fileId == PENDING {
 		_, err := c.Bot().Send(c.Recipient(), "Wait...")
@@ -63,7 +57,7 @@ func (h *Handler) HandleMessage(c tg.Context) error {
 	}
 	if fileId != "" {
 		log.Println("get audio from cache")
-		audio := MakeAudio(video, fileId, false)
+		audio := &tg.Audio{File: tg.File{FileID: fileId}}
 		_, err = c.Bot().Send(c.Recipient(), audio)
 		return err
 	}
@@ -77,8 +71,13 @@ func (h *Handler) HandleMessage(c tg.Context) error {
 		_, err = c.Bot().Send(c.Recipient(), "error downloading audio")
 		return err
 	}
-	log.Println("video: ", video.Id, video.Channel, video.Title, video.Duration)
-	audio := MakeAudio(video, filePath, true)
+	video, err := h.parser.Id2Video(ytId)
+	if err != nil {
+		log.Println(err)
+		_, err := c.Bot().Send(c.Recipient(), "error fetching video info")
+		return err
+	}
+	audio := MakeAudio(video, filePath)
 	_, err = c.Bot().Send(c.Recipient(), audio)
 	h.cache.Set(ytId, audio.FileID)
 	return err
