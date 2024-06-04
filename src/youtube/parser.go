@@ -8,8 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"math"
-
 	"github.com/PuerkitoBio/goquery"
 )
 
@@ -63,25 +61,32 @@ func (p *Parser) parseTitle(doc *goquery.Document) string {
 }
 
 func (p *Parser) parseDuration(doc *goquery.Document) int {
-	duration := doc.Find("#movie_player > div.ytp-chrome-bottom > div.ytp-chrome-controls > div.ytp-left-controls > div.ytp-time-display.notranslate > span:nth-child(2) > span.ytp-time-duration").Text()
-	if duration == "" {
+	durationStr := doc.Find("meta[itemprop='duration']").AttrOr("content", "")
+	if durationStr == "" {
 		log.Println("duration not found")
 		return 0
 	}
-	parts := strings.Split(duration, ":")
-	seconds := 0
-	counter := 0
-	for i := len(parts) - 1; i >= 0; i-- {
-		num, _ := strconv.Atoi(parts[i])
-		seconds += num * int(math.Pow(60, float64(counter)))
-		counter++
+	parts := strings.Split(durationStr, "M")
+	minutesStr := strings.Replace(parts[0], "PT", "", 1)
+	minutes, err := strconv.Atoi(minutesStr)
+	if err != nil {
+		log.Println("error parse duration:", err)
+		return 0
 	}
+	resultDur := minutes * 60
+	secondsStr := strings.Replace(parts[1], "S", "", 1)
+	seconds, err := strconv.Atoi(secondsStr)
+	if err != nil {
+		log.Println("error parse duration:", err)
+		return 0
+	}
+	resultDur += seconds
 
-	return seconds
+	return resultDur
 }
 
 func (p *Parser) parseChannel(doc *goquery.Document) string {
-	channelName := doc.Find("a.yt-simple-endpoint.style-scope.yt-formatted-string").First().Text()
+	channelName := doc.Find("link[itemprop='name']").AttrOr("content", "")
 	if channelName == "" {
 		log.Println("chanel not found")
 		return ""
