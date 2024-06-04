@@ -19,15 +19,21 @@ type YoutubeService interface {
 	Download(link, videoId string) (string, error)
 }
 
+type Parser interface {
+	Id2Video(id string) (youtube.Video, error)
+}
+
 type Handler struct {
 	cache   Cache
 	service YoutubeService
+	parser  Parser
 }
 
-func NewHandler(cache Cache, service YoutubeService) *Handler {
+func NewHandler(cache Cache, service YoutubeService, parser Parser) *Handler {
 	return &Handler{
 		cache:   cache,
 		service: service,
+		parser:  parser,
 	}
 }
 
@@ -44,6 +50,12 @@ func (h *Handler) HandleMessage(c tg.Context) error {
 		_, err := c.Bot().Send(c.Recipient(), "Check youtube url")
 		return err
 	}
+	video, err := h.parser.Id2Video(ytId)
+	if err != nil {
+		log.Println(err)
+		_, err := c.Bot().Send(c.Recipient(), "error fetching video info")
+		return err
+	}
 	fileId := h.cache.Get(ytId)
 	if fileId == PENDING {
 		_, err := c.Bot().Send(c.Recipient(), "Wait...")
@@ -51,12 +63,12 @@ func (h *Handler) HandleMessage(c tg.Context) error {
 	}
 	if fileId != "" {
 		log.Println("get audio from cache")
-		audio := &tg.Audio{File: tg.File{FileID: fileId}}
+		audio := MakeAudio(video, fileId, false)
 		_, err = c.Bot().Send(c.Recipient(), audio)
 		return err
 	}
 	h.cache.Set(ytId, PENDING)
-	log.Println("downloading", link)
+	log.Println("downloading...", link)
 	filePath, err := h.service.Download(link, ytId)
 	defer os.Remove(filePath)
 	if err != nil {
@@ -65,8 +77,9 @@ func (h *Handler) HandleMessage(c tg.Context) error {
 		_, err = c.Bot().Send(c.Recipient(), "error downloading audio")
 		return err
 	}
-	audio := &tg.Audio{File: tg.FromDisk(filePath)}
-	h.cache.Set(ytId, audio.FileID)
+	log.Println("video: ", video.Id, video.Channel, video.Title, video.Duration)
+	audio := MakeAudio(video, filePath, true)
 	_, err = c.Bot().Send(c.Recipient(), audio)
+	h.cache.Set(ytId, audio.FileID)
 	return err
 }
