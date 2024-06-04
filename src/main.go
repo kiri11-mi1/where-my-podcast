@@ -22,7 +22,8 @@ func main() {
 
 	cache := storage.NewCache(GetEnv().RedisUrl, 2000*time.Hour)
 	ytService := youtube.NewDownloader("./downloads")
-	handler := NewHandler(cache, ytService)
+	parser := youtube.NewParser()
+	handler := NewHandler(cache, ytService, parser)
 	b.Handle("/start", handler.HandleStart)
 	b.Handle(tg.OnText, handler.HandleMessage)
 
