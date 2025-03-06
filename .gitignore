@@ -7,3 +7,4 @@ media/
 mongodb-data/
 redis/
 downloads/
+.idea/
