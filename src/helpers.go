@@ -9,5 +9,12 @@ import (
 func MakeAudio(v yt.Video, fileStr string) *tg.Audio {
 	file := tg.FromDisk(fileStr)
 	thumbnail := &tg.Photo{File: tg.FromURL(v.Thumbnail)}
-	return &tg.Audio{File: file, Performer: v.Channel, Title: v.Title, Thumbnail: thumbnail, Duration: v.Duration}
+	return &tg.Audio{
+		File:      file,
+		Performer: v.Channel,
+		Title:     v.Title,
+		Thumbnail: thumbnail,
+		Duration:  v.Duration,
+		FileName:  v.Title,
+	}
 }
