@@ -3,6 +3,7 @@ package youtube
 import (
 	"net/url"
 	"regexp"
+	"strings"
 )
 
 func IsValidLink(link string) bool {
@@ -29,6 +30,12 @@ func IsValidLink(link string) bool {
 		}
 	}
 
+	if strings.HasPrefix(parsedURL.Path, "/shorts/") {
+		id := strings.TrimPrefix(parsedURL.Path, "/shorts/")
+		match, _ := regexp.MatchString(`^[a-zA-Z0-9_-]{11}$`, id)
+		return match
+	}
+
 	return false
 }
 
@@ -43,13 +50,14 @@ func Link2Id(link string) (string, error) {
 		return "", err
 	}
 	var id string
-	if parsedURL.Host == "youtu.be" {
+	switch {
+	case parsedURL.Host == "youtu.be":
 		id = parsedURL.Path[1:]
-	} else {
+	case parsedURL.Path == "/watch":
 		queryParams := parsedURL.Query()
-		if val, ok := queryParams["v"]; ok {
-			id = val[0]
-		}
+		id = queryParams.Get("v")
+	case strings.HasPrefix(parsedURL.Path, "/shorts/"):
+		id = strings.TrimPrefix(parsedURL.Path, "/shorts/")
 	}
 
 	return id, nil
